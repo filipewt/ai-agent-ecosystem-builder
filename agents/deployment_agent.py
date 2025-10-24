@@ -490,11 +490,27 @@ if __name__ == "__main__":
     sys.exit(main())
 '''
         
-        # Write the main application file
+        # Check if main.py already exists and is functional
         main_path = os.path.join(deployment_dir, "src", "main.py")
         os.makedirs(os.path.dirname(main_path), exist_ok=True)
-        with open(main_path, "w") as f:
-            f.write(main_app_content)
+        
+        # Check if main.py already exists and contains functional code
+        if os.path.exists(main_path):
+            with open(main_path, "r") as f:
+                existing_content = f.read()
+            
+            # Check if it's a functional application (not just a template)
+            if any(keyword in existing_content for keyword in 
+                   ["CalculatorApp", "GUI application", "app.run()", "tkinter", "mainloop"]):
+                self.logger.info("Functional main.py already exists, keeping it")
+            else:
+                self.logger.info("Overriding template main.py with executable-specific version")
+                with open(main_path, "w") as f:
+                    f.write(main_app_content)
+        else:
+            self.logger.info("Creating new main.py for executable")
+            with open(main_path, "w") as f:
+                f.write(main_app_content)
         
         # Create PyInstaller spec file
         # Find the main Python file - prioritize src/main.py for executables
