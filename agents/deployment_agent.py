@@ -497,16 +497,28 @@ if __name__ == "__main__":
             f.write(main_app_content)
         
         # Create PyInstaller spec file
-        # Find the main Python file
+        # Find the main Python file - prioritize src/main.py for executables
         main_file = None
-        for file_path in context.get("generated_files", []):
-            if file_path.endswith(".py") and "main" in file_path.lower():
-                main_file = file_path
-                break
         
-        if not main_file:
-            # Default to src/main.py if no main file found
+        # First, check if src/main.py exists (this is what we create for executables)
+        if os.path.exists(os.path.join(deployment_dir, "src", "main.py")):
             main_file = "src/main.py"
+            self.logger.info(f"Using src/main.py for PyInstaller spec")
+        else:
+            # Fallback to looking in generated_files
+            self.logger.info("src/main.py not found, searching in generated_files")
+            for file_path in context.get("generated_files", []):
+                if file_path.endswith(".py") and "main" in file_path.lower():
+                    main_file = file_path
+                    self.logger.info(f"Found main file in generated_files: {file_path}")
+                    break
+            
+            if not main_file:
+                # Default to src/main.py if no main file found
+                main_file = "src/main.py"
+                self.logger.warning("No main file found, defaulting to src/main.py")
+        
+        self.logger.info(f"PyInstaller will use main file: {main_file}")
         
         spec_content = f'''# -*- mode: python ; coding: utf-8 -*-
 
